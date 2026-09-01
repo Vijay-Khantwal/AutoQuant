@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: tradeagent_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: supersecurepassword123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  web:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://admin:supersecurepassword123@db:5432/tradeagent_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  celery_heavy:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A config worker -Q heavy_tasks -l info -P prefork -c 4
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://admin:supersecurepassword123@db:5432/tradeagent_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  celery_fast:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A config worker -Q fast_tasks,celery -l info -P prefork -c 4
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://admin:supersecurepassword123@db:5432/tradeagent_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A config beat -l info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgres://admin:supersecurepassword123@db:5432/tradeagent_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
