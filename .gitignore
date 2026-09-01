@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+.idea/
+.vscode/
+*.pkl
+backend/db.sqlite3
+backend/celerybeat-schedule*
+!backend/requirements.txt

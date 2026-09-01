@@ -1,0 +1,147 @@
+[
+  {
+    "metadata": {
+      "ticker": "HINDALCO.NS",
+      "research_timestamp": "2026-08-25T13:17:47.958720"
+    },
+    "quantitative_inputs": {
+      "ltp": 1058.5,
+      "ml_win_probability": 0.458165623297528,
+      "percentile_rank": 100.0
+    },
+    "fundamentals": {
+      "ticker": "HINDALCO.NS",
+      "status": "SUCCESS",
+      "valuation": {
+        "pe_ratio": 13.920763,
+        "forward_pe": 9.439756,
+        "pb_ratio": 1.7075042,
+        "market_cap_inr": 2332160950272
+      },
+      "profitability_and_returns": {
+        "roe_pct": null,
+        "profit_margins_pct": 5.55,
+        "operating_cash_flow_inr": 102500000000.0,
+        "free_cash_flow_inr": -198460000000.0
+      },
+      "solvency": {
+        "debt_to_equity": 0.73,
+        "total_debt_inr": 991610000000.0,
+        "interest_coverage": null
+      },
+      "ownership": {
+        "insider_promoter_holding_pct": 37.57,
+        "institutional_holding_pct": 40.28
+      }
+    },
+    "news_brief": "Worker Extraction Failed: 'NoneType' object has no attribute 'strip'",
+    "audit_verdict": {
+      "ticker": "HINDALCO.NS",
+      "decision": "REJECT",
+      "confidence_score": 0.85,
+      "risk_flags": [
+        "Negative free cash flow (-\u20b9198.46B) despite positive operating cash flow, indicating significant capital expenditures or working capital strain; news brief indicates data extraction failure, suggesting potential unreported material events."
+      ],
+      "fundamental_summary": "Debt-to-equity is moderate at 0.73 (well below insolvency threshold of 2.0), operating cash flow is strong at \u20b9102.5B, but free cash flow is deeply negative at -\u20b9198.46B, signaling heavy reinvestment or asset impairments. Valuation metrics (P/E 13.92, P/B 1.71) are reasonable for the sector.",
+      "news_and_sentiment_summary": "The Tier 1 news brief failed to extract usable data due to a technical error ('NoneType' object has no attribute 'strip'), indicating a possible disruption in news flow or missing sentiment inputs; no actionable facts (e.g., SEBI actions, governance issues) could be verified from this source.",
+      "final_rationale": "While no hard veto triggers (insolvency, negative operating cash flow with high debt, or governance hazards) are confirmed, the severely negative free cash flow raises concerns about near-term liquidity and capital allocation efficiency. Combined with the inability to verify recent news due to data extraction failure, there is insufficient confidence to support a 15-day swing trade hold.",
+      "recommended_allocation_inr": 0
+    }
+  },
+  {
+    "metadata": {
+      "ticker": "PIDILITIND.NS",
+      "research_timestamp": "2026-08-25T13:17:47.215930"
+    },
+    "quantitative_inputs": {
+      "ltp": 1660.0,
+      "ml_win_probability": 0.4568493072145254,
+      "percentile_rank": 99.57627118644068
+    },
+    "fundamentals": {
+      "ticker": "PIDILITIND.NS",
+      "status": "SUCCESS",
+      "valuation": {
+        "pe_ratio": 63.104374,
+        "forward_pe": 51.82616,
+        "pb_ratio": 15.451325,
+        "market_cap_inr": 1673903079424
+      },
+      "profitability_and_returns": {
+        "roe_pct": null,
+        "profit_margins_pct": 17.2,
+        "operating_cash_flow_inr": 28284500000.0,
+        "free_cash_flow_inr": 22356800000.0
+      },
+      "solvency": {
+        "debt_to_equity": 0.04,
+        "total_debt_inr": 4172100000.0,
+        "interest_coverage": null
+      },
+      "ownership": {
+        "insider_promoter_holding_pct": 69.35,
+        "institutional_holding_pct": 17.43
+      }
+    },
+    "news_brief": "Worker Extraction Failed: 'NoneType' object has no attribute 'strip'",
+    "audit_verdict": {
+      "ticker": "PIDILITIND.NS",
+      "decision": "APPROVE",
+      "confidence_score": 0.85,
+      "risk_flags": [],
+      "fundamental_summary": "Debt-to-equity is very low at 0.04, indicating minimal solvency risk. Operating cash flow is strong at \u20b928.28B, supporting financial health. Valuation metrics show elevated P/E (63.1) and P/B (15.45), reflecting premium pricing but not impairing short-term swing viability.",
+      "news_and_sentiment_summary": "News brief indicates a worker extraction failure due to a technical error, suggesting no material negative news was captured; absence of adverse reports implies no evident governance or regulatory hazards.",
+      "final_rationale": "No hard veto triggers are present: debt levels are safe, cash flows are positive and robust, and no governance or regulatory risks are indicated in the news. The ML model shows moderate win probability (45.68%) but high percentile rank (Top 0.4%), supporting conditional approval for a swing trade.",
+      "recommended_allocation_inr": 15000
+    }
+  },
+  {
+    "metadata": {
+      "ticker": "NHPC.NS",
+      "research_timestamp": "2026-08-25T13:17:49.158036"
+    },
+    "quantitative_inputs": {
+      "ltp": 76.65,
+      "ml_win_probability": 0.4549422038862488,
+      "percentile_rank": 99.15254237288136
+    },
+    "fundamentals": {
+      "ticker": "NHPC.NS",
+      "status": "SUCCESS",
+      "valuation": {
+        "pe_ratio": 27.737226,
+        "forward_pe": 11.875,
+        "pb_ratio": 1.8469466,
+        "market_cap_inr": 763422638080
+      },
+      "profitability_and_returns": {
+        "roe_pct": null,
+        "profit_margins_pct": 31.09,
+        "operating_cash_flow_inr": 32936200000.0,
+        "free_cash_flow_inr": -82786600000.0
+      },
+      "solvency": {
+        "debt_to_equity": 1.32,
+        "total_debt_inr": 546061700000.0,
+        "interest_coverage": null
+      },
+      "ownership": {
+        "insider_promoter_holding_pct": 62.48,
+        "institutional_holding_pct": 21.5
+      }
+    },
+    "news_brief": "Worker Extraction Failed: 'NoneType' object has no attribute 'strip'",
+    "audit_verdict": {
+      "ticker": "NHPC.NS",
+      "decision": "APPROVE",
+      "confidence_score": 0.75,
+      "risk_flags": [
+        "Negative free cash flow despite positive operating cash flow indicates high capital intensity typical of hydropower sector; monitor for sustainability."
+      ],
+      "fundamental_summary": "Debt-to-equity of 1.32 is below the 2.0 hard veto threshold, indicating manageable leverage. Operating cash flow is strongly positive at \u20b932.94B, supporting debt servicing, though free cash flow is negative due to high capex. Valuation shows a high trailing P/E of 27.74 but a more reasonable forward P/E of 11.88, suggesting expected earnings improvement. Profit margins are healthy at 31.09%.",
+      "news_and_sentiment_summary": "News brief extraction failed due to a technical error; no actionable governance, regulatory, or insider controversy signals were available for assessment. Absence of verifiable negative news reduces event risk uncertainty.",
+      "final_rationale": "No hard veto triggers are triggered: solvency is within limits, cash flow from operations is robust, and no governance risks are evident from available data. The negative free cash flow is sector-typical for NHPC's capital-intensive hydropower operations and not indicative of distress. ML model shows low win probability (45.49%), but fundamentals support stability for a 15-day swing hold.",
+      "recommended_allocation_inr": 15000
+    }
+  }
+]

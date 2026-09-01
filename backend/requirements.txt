@@ -1,0 +1,25 @@
+# Core Django stack
+django>=6.1
+djangorestframework>=3.18
+django-cors-headers>=4.9
+channels>=4.3
+channels-redis>=4.3
+daphne>=4.2
+python-decouple>=3.8
+celery>=5.6
+redis>=4.6,<5.0
+
+# ML / Data
+lightgbm
+yfinance
+niftystocks
+pandas
+numpy
+scikit-learn
+
+# LLM / Research
+openai
+tavily-python
+
+# Utilities
+requests
