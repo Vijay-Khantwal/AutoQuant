@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 
 export function useWebSocket(url, onMessage) {
   const ws = useRef(null)
@@ -9,7 +9,11 @@ export function useWebSocket(url, onMessage) {
   const connect = useCallback(() => {
     if (!url) return
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const fullUrl = `${proto}://${window.location.host}${url}`
+    const useAzure = localStorage.getItem('USE_AZURE') === 'true'
+    const azureIp = import.meta.env.VITE_AZURE_IP || '20.235.242.149'
+    const fullUrl = useAzure 
+      ? `ws://${azureIp}:8000${url}`
+      : `${proto}://${window.location.host}${url}`
     
     ws.current = new WebSocket(fullUrl)
     
