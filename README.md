@@ -11,7 +11,7 @@ AutoQuant is an institutional-grade, fully autonomous quantitative trading platf
 - **Distributed ML Pipeline**: Ingests 8+ years of Nifty 500 market data to autonomously train and validate LightGBM momentum models.
 - **Agentic LLM Auditor**: A Tier-2 AI validation layer that analyzes model predictions against fundamental metrics and macro trends to filter false positives.
 - **Asynchronous Execution**: Powered by a robust Celery + Redis architecture with dedicated fast/heavy workers to prevent UI blocking during massive ML computations.
-- **Live WebSocket Dashboard**: A React + Tailwind CSS frontend with a built-in GlobalTaskMonitor that streams real-time logs and task progress via WebSockets.
+- **Live WebSocket Dashboard**: A React + Tailwind CSS frontend with a built-in `GlobalTaskMonitor` that streams real-time logs and task progress via WebSockets.
 - **Multi-Environment Cloud Proxy**: One-click environment toggle to seamlessly switch the frontend dashboard between local SQLite development and the live Azure PostgreSQL production database.
 - **Paper Trading & P&L Engine**: Simulates comprehensive broker fees (Zerodha, Dhan, Groww, Angel One) and tracks 15-day strict-hold trades.
 
@@ -19,7 +19,7 @@ AutoQuant is an institutional-grade, fully autonomous quantitative trading platf
 
 ## Architecture
 
-`mermaid
+```mermaid
 graph TD
     UI[React Frontend] -->|HTTP / WebSockets| Daphne[Django ASGI/Daphne]
     Daphne -->|Query| DB[(PostgreSQL/SQLite)]
@@ -29,17 +29,28 @@ graph TD
     CeleryHeavy -->|Train/Predict| LightGBM
     CeleryFast -->|Audit| LLM[Agentic LLM]
     CeleryFast -->|Execute| Broker[Dhan Sandbox]
-`
+```
+
+---
 
 ## Quick Start: Local Development (Windows)
 
 ### Prerequisites
 - Python 3.12+
 - Node.js 18+
-- Redis Server (via WSL2 or Windows port)
+- Redis Server
 
-### 1. Backend Setup
-`ash
+### 1. Start Redis
+AutoQuant requires Redis for WebSockets and Celery task routing.
+**Using WSL2 (Recommended on Windows):**
+```bash
+wsl redis-server
+```
+*(Alternatively, install the native Windows Redis port from Memurai or Microsoft Archive).*
+
+### 2. Backend Setup
+Open a new terminal and set up the Django backend:
+```bash
 cd backend
 python -m venv venv
 venv\Scripts\activate
@@ -49,25 +60,27 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 
-# Start Django Server
+# Start Django Server (ASGI)
 daphne -p 8000 config.asgi:application
-`
+```
 
-### 2. Start Celery Workers
-Open a new terminal, activate the venv, and run:
-`ash
+### 3. Start Celery Workers
+Open another new terminal, activate the virtual environment again, and run the worker:
+```bash
 cd backend
+venv\Scripts\activate
 # Recommended flags for Windows local development
 celery -A config worker -l info -P solo
-`
+```
 
-### 3. Frontend Setup
-`ash
+### 4. Frontend Setup
+Open a final terminal for the React dashboard:
+```bash
 cd frontend
 npm install
 npm run dev
-`
-The application will launch at http://localhost:5173.
+```
+The application will launch at **http://localhost:5173**.
 
 ---
 
@@ -75,22 +88,19 @@ The application will launch at http://localhost:5173.
 
 AutoQuant is designed to be hosted autonomously on an Azure Virtual Machine via Docker Compose.
 
-### 1. Provision Server
-Spin up a standard Linux VM (e.g., Ubuntu 22.04) and ensure **Docker** and **Docker Compose** are installed.
-
-### 2. Configure Environment
-Create a .env file in the root directory:
-`env
+### 1. Configure Environment
+Create a `.env` file in the root directory on your server:
+```env
 DEBUG=False
 DJANGO_SECRET_KEY=your-secure-key
 REDIS_URL=redis://redis:6379/0
 DATABASE_URL=postgres://autoquant:secret@db:5432/autoquant_db
 DHAN_CLIENT_ID=...
 GEMINI_API_KEY=...
-`
+```
 
-### 3. Deploy Containers
-`ash
+### 2. Deploy Containers
+```bash
 # Build and spin up the 6-container cluster
 docker-compose up -d --build
 
@@ -99,22 +109,22 @@ docker-compose exec web python manage.py migrate
 
 # Create the production admin account
 docker-compose exec web python manage.py createsuperuser
-`
+```
 
-### 4. Connect Local Frontend to Azure
+### 3. Connect Local Frontend to Azure
 You can monitor your live Azure production server from your local Windows machine!
-Simply open frontend/.env and set:
-`env
+Simply open `frontend/.env` and set:
+```env
 VITE_BACKEND=AZURE
-`
+```
 Double-click the sleek Environment Badge in your browser to instantly toggle your dashboard between **LOCAL TEST** and **AZURE CLOUD**.
 
 ---
 
 ## Daily Autonomous Pipeline (Cron)
 
-Celery Beat is configured to run the master pipeline automatically.
-- **3:10 PM**: autonomous_daily_pipeline_task fires.
+Celery Beat is configured to run the master pipeline automatically on production.
+- **3:10 PM**: `autonomous_daily_pipeline_task` fires.
 - **Step 1**: Downloads today's Nifty 500 snapshot.
 - **Step 2**: LightGBM ranks the top momentum candidates.
 - **Step 3**: The Agentic LLM audits the top 5 candidates.
