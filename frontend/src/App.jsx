@@ -48,7 +48,7 @@ const ProtectedRoute = ({ children }) => {
         {children}
       </main>
       <GlobalTaskMonitor />
-      <EnvironmentBadge />
+      
       <ToastManager />
     </div>
   )
@@ -57,6 +57,7 @@ const ProtectedRoute = ({ children }) => {
 export default function App() {
   return (
     <BrowserRouter>
+      <EnvironmentBadge />
       <Routes>
         <Route path="/login" element={<Login />} />
         
@@ -78,3 +79,4 @@ export default function App() {
     </BrowserRouter>
   )
 }
+
