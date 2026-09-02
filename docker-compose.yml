@@ -96,3 +96,5 @@ services:
 
 volumes:
   postgres_data:
+    name: tradetest_postgres_data
+
