@@ -65,19 +65,23 @@ daphne -p 8000 config.asgi:application
 ```
 
 ### 3. Start Celery Workers
-Open another new terminal, activate the virtual environment again, and run the worker.
-*(Note: Locally, we run one combined worker listening to all queues. In production, Docker splits these into Fast, Heavy, and Beat).*
+Since this project mimics a distributed production environment, open 3 separate terminals (with the `venv` activated in each) to monitor your queues independently:
+
+**Terminal A: Fast Worker (Trade Executions & Fast Tasks)**
 ```bash
 cd backend
-venv\Scripts\activate
-# Start a combined worker for both fast and heavy ML tasks
-celery -A config worker -l info -Q celery,fast_tasks,heavy_tasks -P solo
+celery -A config worker -l info -Q fast_tasks,celery -P solo
 ```
 
-*(Optional) If you want to test the autonomous daily 3:10 PM trigger locally, open a separate terminal and start Celery Beat:*
+**Terminal B: Heavy Worker (ML Training & Inference)**
 ```bash
 cd backend
-venv\Scripts\activate
+celery -A config worker -l info -Q heavy_tasks -P solo
+```
+
+**Terminal C: Celery Beat (Cron Scheduler)**
+```bash
+cd backend
 celery -A config beat -l info
 ```
 
@@ -89,6 +93,20 @@ npm install
 npm run dev
 ```
 The application will launch at **http://localhost:5173**.
+
+---
+
+## 🐳 Quick Start: Local Development (Docker)
+
+Instead of managing 6 separate terminals, you can run the entire production-grade cluster on your Windows machine using Docker Desktop.
+
+1. Ensure **Docker Desktop** is running on Windows.
+2. Create a `.env` file in your root folder (copy from `.env.example`).
+3. Run the cluster:
+```bash
+docker-compose up -d --build
+```
+*(Note: Running via Docker locally will spin up a fresh PostgreSQL database container instead of using your local SQLite file. Run `docker-compose exec web python manage.py migrate` to initialize it).*
 
 ---
 
