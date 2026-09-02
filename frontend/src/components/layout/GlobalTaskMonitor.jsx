@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTaskStore, useToastStore } from '../../store/appStore'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Check, X } from 'lucide-react'
@@ -86,7 +86,7 @@ function TaskWatcher({ taskId, label }) {
     receivedDone.current = false
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
     const useAzure = localStorage.getItem(`USE_AZURE`) === `true`;
-    const url = useAzure ? `ws://20.235.242.149:8000/ws/tasks/${taskId}/` : `${proto}://${window.location.host}/ws/tasks/${taskId}/`;
+    const url = useAzure ? `ws://${import.meta.env.VITE_AZURE_IP || '20.235.242.149'}:8000/ws/tasks/${taskId}/` : `${proto}://${window.location.host}/ws/tasks/${taskId}/`;
     const ws = new WebSocket(url)
     wsRef.current = ws
 

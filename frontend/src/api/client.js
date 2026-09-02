@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const useAzure = localStorage.getItem('USE_AZURE') === 'true'
-const baseURL = useAzure ? 'http://20.235.242.149:8000/api' : '/api'
+const baseURL = useAzure ? `http://${import.meta.env.VITE_AZURE_IP || '20.235.242.149'}:8000/api` : '/api'
 
 const client = axios.create({ baseURL })
 
