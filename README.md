@@ -1,4 +1,4 @@
-﻿# AutoQuant - AI Quantitative Trading Platform
+# AutoQuant - AI Quantitative Trading Platform
 
 ![Dashboard Preview](https://img.shields.io/badge/Status-Active-brightgreen) ![Python](https://img.shields.io/badge/Python-3.13-blue) ![Django](https://img.shields.io/badge/Django-6.1-green) ![React](https://img.shields.io/badge/React-18-blue) ![Celery](https://img.shields.io/badge/Celery-Distributed-yellow) ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 
@@ -65,12 +65,20 @@ daphne -p 8000 config.asgi:application
 ```
 
 ### 3. Start Celery Workers
-Open another new terminal, activate the virtual environment again, and run the worker:
+Open another new terminal, activate the virtual environment again, and run the worker.
+*(Note: Locally, we run one combined worker listening to all queues. In production, Docker splits these into Fast, Heavy, and Beat).*
 ```bash
 cd backend
 venv\Scripts\activate
-# Recommended flags for Windows local development
-celery -A config worker -l info -P solo
+# Start a combined worker for both fast and heavy ML tasks
+celery -A config worker -l info -Q celery,fast_tasks,heavy_tasks -P solo
+```
+
+*(Optional) If you want to test the autonomous daily 3:10 PM trigger locally, open a separate terminal and start Celery Beat:*
+```bash
+cd backend
+venv\Scripts\activate
+celery -A config beat -l info
 ```
 
 ### 4. Frontend Setup
