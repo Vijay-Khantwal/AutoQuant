@@ -21,7 +21,6 @@ class Command(BaseCommand):
         count_trade = 0
 
         for item in data:
-            # Get or create strategy safely
             strat_name = item.pop('strategy_name', 'Legacy 3/2')
             strategy, _ = StrategyProfile.objects.get_or_create(
                 name=strat_name,
@@ -30,11 +29,11 @@ class Command(BaseCommand):
 
             trade_data = item.pop('trade', None)
 
-            # Prevent duplicate inserts if run multiple times
             existing = Position.objects.filter(
                 ticker=item['ticker'],
                 entry_date=item['entry_date'],
-                entry_price=item['entry_price']
+                entry_price=item['entry_price'],
+                strategy=strategy
             ).first()
 
             if not existing:
