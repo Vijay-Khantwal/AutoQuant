@@ -14,6 +14,30 @@ import Settings       from './pages/Settings'
 import Login          from './pages/Login'
 import { Navigate } from 'react-router-dom'
 
+const EnvironmentBadge = () => {
+  // Default to env var if not set in local storage
+  const stored = localStorage.getItem('USE_AZURE');
+  if (stored === null) {
+    localStorage.setItem('USE_AZURE', (import.meta.env.VITE_BACKEND === 'AZURE').toString());
+  }
+  const isAzure = localStorage.getItem('USE_AZURE') === 'true';
+
+  const toggleEnv = () => {
+    localStorage.setItem('USE_AZURE', (!isAzure).toString());
+    window.location.reload();
+  };
+  
+  return (
+    <div 
+      onDoubleClick={toggleEnv}
+      title="Double click to toggle environment"
+      className={`cursor-pointer fixed top-3 left-1/2 -translate-x-1/2 z-[9999] px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg border backdrop-blur-sm flex items-center gap-2 ${isAzure ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
+      <span className={`w-2 h-2 rounded-full animate-pulse ${isAzure ? 'bg-blue-400' : 'bg-emerald-400'}`}></span>
+      {isAzure ? 'AZURE CLOUD' : 'LOCAL TEST'}
+    </div>
+  )
+}
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('access_token')
   if (!token) return <Navigate to="/login" replace />
@@ -24,6 +48,7 @@ const ProtectedRoute = ({ children }) => {
         {children}
       </main>
       <GlobalTaskMonitor />
+      <EnvironmentBadge />
       <ToastManager />
     </div>
   )

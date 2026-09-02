@@ -1,8 +1,11 @@
 import axios from 'axios'
 
-const client = axios.create({ baseURL: '/api' })
+const useAzure = localStorage.getItem('USE_AZURE') === 'true'
+const baseURL = useAzure ? 'http://20.235.242.149:8000/api' : '/api'
 
-// Request interceptor — add token
+const client = axios.create({ baseURL })
+
+// Request interceptor ?" add token
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
   if (token) {
@@ -11,7 +14,7 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Response interceptor — log errors globally
+// Response interceptor ?" log errors globally
 client.interceptors.response.use(
   (r) => r,
   (err) => {

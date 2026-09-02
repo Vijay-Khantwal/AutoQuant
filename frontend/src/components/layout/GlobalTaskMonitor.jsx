@@ -85,7 +85,8 @@ function TaskWatcher({ taskId, label }) {
     mounted.current = true
     receivedDone.current = false
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const url = `${proto}://${window.location.host}/ws/tasks/${taskId}/`
+    const useAzure = localStorage.getItem(`USE_AZURE`) === `true`;
+    const url = useAzure ? `ws://20.235.242.149:8000/ws/tasks/${taskId}/` : `${proto}://${window.location.host}/ws/tasks/${taskId}/`;
     const ws = new WebSocket(url)
     wsRef.current = ws
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui'
-import axios from 'axios'
+import client from '../api/client'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -13,7 +13,7 @@ export default function Login() {
     e.preventDefault()
     setError('')
     try {
-      const res = await axios.post('/api/token/', { username, password })
+      const res = await client.post('/token/', { username, password })
       localStorage.setItem('access_token', res.data.access)
       localStorage.setItem('refresh_token', res.data.refresh)
       navigate('/')
@@ -64,3 +64,4 @@ export default function Login() {
     </div>
   )
 }
+
