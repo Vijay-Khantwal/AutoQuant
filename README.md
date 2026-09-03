@@ -2,7 +2,7 @@
 
 ![Dashboard Preview](https://img.shields.io/badge/Status-Active-brightgreen) ![Python](https://img.shields.io/badge/Python-3.13-blue) ![Django](https://img.shields.io/badge/Django-6.1-green) ![React](https://img.shields.io/badge/React-18-blue) ![Celery](https://img.shields.io/badge/Celery-Distributed-yellow) ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
 
-AutoQuant is an institutional-grade, fully autonomous quantitative trading platform. It orchestrates an end-to-end data pipeline, predictive ML modeling (LightGBM), an Agentic LLM auditor for signal validation, and live execution via a distributed Celery/Redis background architecture.
+AutoQuant is an experimental autonomous quantitative trading platform (currently in active testing). It orchestrates an end-to-end data pipeline, predictive ML modeling (LightGBM), an Agentic LLM auditor for signal validation, and live execution via a distributed Celery/Redis background architecture.
 
 ---
 
@@ -155,3 +155,4 @@ Celery Beat is configured to run the master pipeline automatically on production
 - **Step 2**: LightGBM ranks the top momentum candidates.
 - **Step 3**: The Agentic LLM audits the top 5 candidates.
 - **Step 4**: Approved trades are executed.
+
