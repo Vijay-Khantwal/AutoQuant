@@ -25,6 +25,7 @@ FEATURE_COLS = [
     "Intraday_Range", "Close_Open_Momentum", "Top_Wick_Rejection",
     "Dist_SMA_10", "Dist_SMA_50", "Volume_Ratio",
     "Relative_Strength_10d", "Market_Regime_200",
+    "VIX_Close", "VIX_5d_Change",
     "Month", "DayOfWeek"
 ]
 
@@ -83,6 +84,7 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
         log("Loading from local training cache...")
         raw_data = pd.read_pickle(str(CACHE_FILE))
         nifty_df = yf.Ticker("^NSEI").history(start=START_DATE, end=end_date)
+        vix_df = yf.Ticker("^INDIAVIX").history(start=START_DATE, end=end_date)
     else:
         log("Fetching Nifty 500 universe (this takes ~2 minutes)...")
         raw_basket = ns.get_nifty500_with_ns()
@@ -90,13 +92,21 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
         stock_basket = [t for t in raw_basket if t not in known_delisted]
         raw_data = yf.download(stock_basket, start=START_DATE, end=end_date, progress=False, threads=True, group_by="ticker")
         nifty_df = yf.Ticker("^NSEI").history(start=START_DATE, end=end_date)
+        vix_df = yf.Ticker("^INDIAVIX").history(start=START_DATE, end=end_date)
         raw_data.to_pickle(str(CACHE_FILE))
         log(f"Cache saved -> {CACHE_FILE}")
 
     nifty_df["Nifty_SMA_200"] = nifty_df["Close"].rolling(window=200).mean()
     nifty_df["Market_Regime_200"] = nifty_df["Close"] / nifty_df["Nifty_SMA_200"] - 1
     nifty_df["Nifty_Return_10d"] = nifty_df["Close"] / nifty_df["Close"].shift(10) - 1
-    macro_features = nifty_df[["Market_Regime_200", "Nifty_Return_10d"]].copy().tz_localize(None)
+    
+    vix_df["VIX_Close"] = vix_df["Close"]
+    vix_df["VIX_5d_Change"] = vix_df["Close"] / vix_df["Close"].shift(5) - 1
+    
+    macro_features = nifty_df[["Market_Regime_200", "Nifty_Return_10d"]].copy()
+    macro_features["VIX_Close"] = vix_df["VIX_Close"]
+    macro_features["VIX_5d_Change"] = vix_df["VIX_5d_Change"]
+    macro_features = macro_features.tz_localize(None)
 
     log("Processing features and applying path-dependent labelling...")
     all_stock_data = []
