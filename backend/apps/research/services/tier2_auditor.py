@@ -1,11 +1,7 @@
-"""
-research/services/tier2_auditor.py
-Nemotron 120B — Chief Risk Officer auditor (Tier 2 LLM).
-"""
 import json
 import logging
 
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -18,6 +14,7 @@ Core Directives for a 15-Day Hold:
 1. HUNT FOR RED FLAGS: Actively search the news and fundamentals for any reason a stock might drop in the next 15 days. Look for insider selling, poor earnings guidance, sector headwinds, regulatory crackdowns, or sudden management changes.
 2. VALUATION AND DEBT MATTER: While momentum stocks can run hot, extreme overvaluation combined with high debt is a ticking time bomb. Be highly skeptical of companies with negative operating cash flow or Debt-to-Equity > 1.5.
 3. PRESERVE CAPITAL: It is ALWAYS better to reject a mediocre setup than to risk capital. Be ruthless. If the news is just "okay" but not great, REJECT. If there is no clear upcoming catalyst, REJECT. 
+4. SYNTHESIZE BROAD CONTEXT: You will be provided with a broad executive summary of the current news and qualitative realities. You must weigh this nuanced reality heavily against the strict numerical fundamentals.
 
 Hard Veto Rules (REJECT immediately if ANY are true):
 1. Weak Fundamentals: High debt, burning cash, or consistently declining profit margins.
@@ -26,7 +23,7 @@ Hard Veto Rules (REJECT immediately if ANY are true):
 4. Any mention of SEBI probes, auditor resignations, or promoter pledging.
 
 Decision Standard:
-- REJECT: This should be your default stance. Reject if there is ANY ambiguity, weakness in fundamentals, or lack of a strong positive catalyst.
+- REJECT: This should be your default stance. Reject if there is ANY ambiguity, weakness in fundamentals, negative qualitative reality, or lack of a strong positive catalyst.
 - APPROVE: ONLY if the stock has pristine short-term catalysts, clean fundamentals, and absolute zero event risk.
 
 You MUST respond ONLY with a valid JSON object matching the requested schema. Do NOT wrap it in markdown blockquotes.
@@ -34,10 +31,6 @@ You MUST respond ONLY with a valid JSON object matching the requested schema. Do
 
 
 def audit_stock(dossier: dict, news_brief: str) -> dict:
-    """
-    Tier 2: runs the Nemotron auditor and returns a parsed verdict dict.
-    Raises on unrecoverable errors; returns error dict on JSON parse failure.
-    """
     ticker = dossier["metadata"]["ticker"]
     prompt = f"""
 Evaluate the following equity dossier and output your final audit verdict.
@@ -51,44 +44,58 @@ Percentile Rank: Top {100 - dossier['quantitative_inputs']['percentile_rank']:.1
 --- FUNDAMENTALS & VALUATION ---
 {json.dumps(dossier['fundamentals'], indent=2)}
 
---- TIER 1 NEWS BRIEF (DISTILLED FACTS) ---
+--- TIER 1 NEWS BRIEF (BROAD CONTEXT) ---
 {news_brief}
 
-Output your evaluation strictly in the following JSON format:
+You MUST output ONLY a valid JSON object with the following exact keys and no other text:
 {{
-  "ticker": "{ticker}",
-  "decision": "APPROVE" or "REJECT",
-  "confidence_score": 0.00,
-  "risk_flags": ["<string explaining flag, or empty if none>"],
-  "fundamental_summary": "<brief assessment of debt, cashflow, and valuation>",
-  "news_and_sentiment_summary": "<brief synthesis of the news brief>",
-  "final_rationale": "<concise 2-sentence rationale for approval or rejection>",
-  "recommended_allocation_inr": <number: 0 if REJECT, up to 20000 if APPROVE>
+    "decision": "APPROVE" or "REJECT",
+    "confidence_score": <float between 0.0 and 1.0>,
+    "risk_flags": [<list of strings detailing major risks, missing data, or bad qualitative signals>],
+    "fundamental_summary": "<brief summary of valuation and cash flow>",
+    "news_context_summary": "<brief summary of Tier 1 news context>",
+    "final_rationale": "<1 paragraph explaining the decision>",
+    "recommended_allocation_inr": <int: 0 if REJECT, up to 20000 if APPROVE>
 }}
 """
     try:
         logger.info("  [Tier 2] Auditing %s...", ticker)
-        client = OpenAI(base_url=settings.NIM_BASE_URL, api_key=settings.NVIDIA_API_KEY)
+        
+        if settings.LLM_PROVIDER == "azure":
+            client = AzureOpenAI(
+                api_key=settings.AZURE_OPENAI_KEY,
+                api_version=settings.AZURE_OPENAI_API_VERSION,
+                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                max_retries=3
+            )
+            target_model = settings.AZURE_OPENAI_REASONING_DEPLOYMENT_NAME
+        else:
+            client = OpenAI(
+                base_url=settings.NIM_BASE_URL, 
+                api_key=settings.NVIDIA_API_KEY,
+                max_retries=3
+            )
+            target_model = settings.NVIDIA_REASONING_MODEL
+
         response = client.chat.completions.create(
-            model=settings.NVIDIA_REASONING_MODEL,
+            model=target_model,
             messages=[
                 {"role": "system", "content": SYSTEM_INSTRUCTION},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.0,
-            max_tokens=8000,
+            max_completion_tokens=8000,
         )
         content = response.choices[0].message.content
         if not content:
             raise ValueError("No response generated by Tier 2 LLM.")
         content = content.strip()
-        if content.startswith("```json"):
+        if content.startswith("`json"):
             content = content[7:]
-        elif content.startswith("```"):
+        elif content.startswith("`"):
             content = content[3:]
         
         content = content.strip()
-        if content.endswith("```"):
+        if content.endswith("`"):
             content = content[:-3].strip()
         
         return json.loads(content)

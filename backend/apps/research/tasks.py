@@ -94,8 +94,9 @@ def run_research_task(self, signal_run_id: int = None, research_run_id: int = No
                 "fundamentals": fund_data,
             }
 
-            log(f"[2/3] {ticker}: Tier 1 distilling news...")
-            news_brief = distill_news_articles(ticker, web_data)
+            log(f"[2/3] {ticker}: Tier 1 synthesizing news context...")
+            tier1_result = distill_news_articles(ticker, web_data)
+            news_brief = tier1_result.get("bullet_points", "No news summarized.")
 
             log(f"[3/3] {ticker}: Tier 2 auditing...")
             verdict = audit_stock(dossier, news_brief)
@@ -109,7 +110,7 @@ def run_research_task(self, signal_run_id: int = None, research_run_id: int = No
                 confidence_score=verdict.get("confidence_score", 0.0),
                 risk_flags=verdict.get("risk_flags", []),
                 fundamental_summary=verdict.get("fundamental_summary", ""),
-                news_sentiment_summary=verdict.get("news_and_sentiment_summary", ""),
+                news_sentiment_summary=verdict.get("news_context_summary", ""),
                 final_rationale=verdict.get("final_rationale", ""),
                 recommended_allocation_inr=verdict.get("recommended_allocation_inr", 0),
                 fundamentals_json=dossier.get("fundamentals", {}),
@@ -176,8 +177,9 @@ def rerun_single_stock_task(self, decision_id: int):
             'fundamentals': fund_data,
         }
 
-        log(f'[2/3] {ticker}: Tier 1 distilling news...')
-        news_brief = distill_news_articles(ticker, web_data)
+        log(f'[2/3] {ticker}: Tier 1 synthesizing news context...')
+        tier1_result = distill_news_articles(ticker, web_data)
+        news_brief = tier1_result.get("bullet_points", "No news summarized.")
 
         log(f'[3/3] {ticker}: Tier 2 auditing...')
         verdict = audit_stock(dossier, news_brief)
@@ -188,7 +190,7 @@ def rerun_single_stock_task(self, decision_id: int):
         dec.confidence_score = verdict.get('confidence_score', 0.0)
         dec.risk_flags = verdict.get('risk_flags', [])
         dec.fundamental_summary = verdict.get('fundamental_summary', '')
-        dec.news_sentiment_summary = verdict.get('news_and_sentiment_summary', '')
+        dec.news_sentiment_summary = verdict.get('news_context_summary', '')
         dec.final_rationale = verdict.get('final_rationale', '')
         dec.recommended_allocation_inr = verdict.get('recommended_allocation_inr', 0)
         dec.fundamentals_json = dossier.get('fundamentals', {})
@@ -202,3 +204,24 @@ def rerun_single_stock_task(self, decision_id: int):
         _push_log(self.request.id, f"ERROR: {exc}")
         raise
 
+from celery import shared_task
+from django.utils import timezone
+from datetime import timedelta
+from apps.research.models import NewsArticle
+from apps.research.services.rss_ingestion import fetch_rss_feeds
+
+@shared_task
+def fetch_rss_feeds_task():
+    """Celery Beat task: fetch global/macro RSS feeds regularly."""
+    try:
+        new_count = fetch_rss_feeds()
+        return f"Ingested {new_count} new RSS articles."
+    except Exception as e:
+        return str(e)
+
+@shared_task
+def clean_old_news_task():
+    """Celery Beat task: purge news older than 30 days to prevent bloat."""
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    deleted, _ = NewsArticle.objects.filter(published_at__lt=thirty_days_ago).delete()
+    return f"Purged {deleted} old articles."

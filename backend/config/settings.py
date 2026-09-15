@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -133,6 +133,14 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'apps.execution.tasks.autonomous_daily_pipeline_task',
         'schedule': crontab(minute='10', hour='15', day_of_week='mon-fri'),
     },
+    'fetch-macro-rss-every-30-mins': {
+        'task': 'apps.research.tasks.fetch_rss_feeds_task',
+        'schedule': crontab(minute='*/30', hour='8-16', day_of_week='mon-fri'),
+    },
+    'purge-old-news-daily': {
+        'task': 'apps.research.tasks.clean_old_news_task',
+        'schedule': crontab(minute='0', hour='17'),
+    },
 }
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Kolkata"
@@ -165,6 +173,16 @@ NVIDIA_API_KEY    = config("NVIDIA_API_KEY",    default="")
 NIM_BASE_URL      = config("NIM_BASE_URL",      default="https://integrate.api.nvidia.com/v1")
 NVIDIA_FAST_MODEL = config("WORKER_MODEL",      default="stepfun-ai/step-3.7-flash")
 NVIDIA_REASONING_MODEL = config("AUDITOR_MODEL", default="nvidia/nemotron-3-super-120b-a12b")
+
+# LLM Routing Toggle
+LLM_PROVIDER = config("LLM_PROVIDER", default="nvidia").lower()
+
+# Azure OpenAI
+AZURE_OPENAI_KEY = config("AZURE_OPENAI_KEY", default="")
+AZURE_OPENAI_ENDPOINT = config("AZURE_OPENAI_ENDPOINT", default="")
+AZURE_OPENAI_API_VERSION = config("AZURE_OPENAI_API_VERSION", default="2024-02-15-preview")
+AZURE_OPENAI_FAST_DEPLOYMENT_NAME = config("AZURE_OPENAI_FAST_DEPLOYMENT_NAME", default="gpt-4o-mini")
+AZURE_OPENAI_REASONING_DEPLOYMENT_NAME = config("AZURE_OPENAI_REASONING_DEPLOYMENT_NAME", default="gpt-5.6-sol")
 DHAN_CLIENT_ID    = config("DHAN_CLIENT_ID",    default="")
 DHAN_ACCESS_TOKEN = config("DHAN_ACCESS_TOKEN", default="")
 DHAN_ENV          = config("DHAN_ENV", default="sandbox")  # "live" or "sandbox"

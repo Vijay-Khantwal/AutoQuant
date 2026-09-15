@@ -29,3 +29,14 @@ djangorestframework-simplejwt>=5.4
 psycopg2-binary>=2.9
 
 dj-database-url>=2.3
+
+# NLP Integration
+transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+
+
+
+yahooquery==2.4.1
+feedparser==6.0.11

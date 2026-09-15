@@ -65,3 +65,20 @@ class StockDecision(models.Model):
 
     def __str__(self):
         return f"{self.ticker} → {self.action} (run={self.run_id})"
+
+
+class NewsArticle(models.Model):
+    """Local cache of financial news from RSS feeds to avoid high Tavily search API costs."""
+    ticker = models.CharField(max_length=30, db_index=True, blank=True, null=True)
+    title = models.CharField(max_length=500)
+    summary = models.TextField(blank=True)
+    url = models.URLField(unique=True, max_length=1000)
+    source = models.CharField(max_length=100, blank=True)
+    published_at = models.DateTimeField(db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-published_at"]
+
+    def __str__(self):
+        return f"[{self.ticker or 'MACRO'}] {self.title[:50]}"

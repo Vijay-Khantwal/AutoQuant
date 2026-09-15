@@ -26,6 +26,7 @@ FEATURE_COLS = [
     "Intraday_Range", "Close_Open_Momentum", "Top_Wick_Rejection",
     "Dist_SMA_10", "Dist_SMA_50", "Volume_Ratio",
     "Relative_Strength_10d", "Market_Regime_200",
+    "Month", "DayOfWeek"
 ]
 
 
@@ -104,7 +105,9 @@ def run_prediction(strategy_id: int, log_callback=None) -> list[dict]:
                 "Dist_SMA_50": row["Close"] / df["Close"].rolling(50).mean().iloc[-1] - 1,
                 "Volume_Ratio": row["Volume"] / last_vol if last_vol > 0 else 1.0,
                 "Relative_Strength_10d": (row["Close"] / df["Close"].shift(10).iloc[-1] - 1) - row["Nifty_Return_10d"],
-                "Market_Regime_200": row["Market_Regime_200"]
+                "Market_Regime_200": row["Market_Regime_200"],
+                "Month": last_date.month,
+                "DayOfWeek": last_date.dayofweek
             }
             features["ticker"] = sym
             features["ltp"] = last_price

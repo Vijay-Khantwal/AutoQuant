@@ -25,6 +25,7 @@ FEATURE_COLS = [
     "Intraday_Range", "Close_Open_Momentum", "Top_Wick_Rejection",
     "Dist_SMA_10", "Dist_SMA_50", "Volume_Ratio",
     "Relative_Strength_10d", "Market_Regime_200",
+    "Month", "DayOfWeek"
 ]
 
 TRADING_ROOT = Path(settings.TRADING_ROOT)
@@ -50,6 +51,13 @@ def _create_labels(highs, lows, closes, hold_days, tp, sl):
     return labels
 
 
+def _get_sample_weights(index):
+    """Exponential decay: 500 trading days half-life (bias to recency)."""
+    max_date = index.max()
+    days_diff = (max_date - index).days
+    return np.exp(-np.log(2) * days_diff.values / 500.0)
+
+
 def retrain_model(strategy_id: int, log_callback=None) -> dict:
     """
     Full LightGBM retraining pipeline for a specific strategy profile.
@@ -69,21 +77,21 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
     log(f"Started training {strategy.name} (TP: {tp_target}, SL: {sl_stop}, Hold: {hold_period}d)")
 
     end_date = (datetime.today() - timedelta(days=hold_period + 10)).strftime("%Y-%m-%d")
-    log(f"Dataset window: {START_DATE} → {end_date}")
+    log(f"Dataset window: {START_DATE} -> {end_date}")
 
     if CACHE_FILE.exists():
-        log("⚡ Loading from local training cache...")
+        log("Loading from local training cache...")
         raw_data = pd.read_pickle(str(CACHE_FILE))
         nifty_df = yf.Ticker("^NSEI").history(start=START_DATE, end=end_date)
     else:
-        log("📥 Fetching Nifty 500 universe (this takes ~2 minutes)...")
+        log("Fetching Nifty 500 universe (this takes ~2 minutes)...")
         raw_basket = ns.get_nifty500_with_ns()
         known_delisted = ["HDFC.NS", "TATAMOTORS.NS", "MOTHERSUMI.NS", "MINDAIND.NS", "IBULHSGFIN.NS"]
         stock_basket = [t for t in raw_basket if t not in known_delisted]
         raw_data = yf.download(stock_basket, start=START_DATE, end=end_date, progress=False, threads=True, group_by="ticker")
         nifty_df = yf.Ticker("^NSEI").history(start=START_DATE, end=end_date)
         raw_data.to_pickle(str(CACHE_FILE))
-        log(f"Cache saved → {CACHE_FILE}")
+        log(f"Cache saved -> {CACHE_FILE}")
 
     nifty_df["Nifty_SMA_200"] = nifty_df["Close"].rolling(window=200).mean()
     nifty_df["Market_Regime_200"] = nifty_df["Close"] / nifty_df["Nifty_SMA_200"] - 1
@@ -103,6 +111,10 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
                 continue
             df.index = df.index.tz_localize(None)
             df = df.join(macro_features, how="inner")
+            
+            df["Month"] = df.index.month
+            df["DayOfWeek"] = df.index.dayofweek
+            
             df["Intraday_Range"] = (df["High"] - df["Low"]) / df["Open"]
             df["Close_Open_Momentum"] = (df["Close"] - df["Open"]) / df["Open"]
             df["Top_Wick_Rejection"] = (df["High"] - df[["Open", "Close"]].max(axis=1)) / df["Open"]
@@ -138,8 +150,11 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
         test_mask = dataset.index.isin(unique_dates[train_end:test_end])
         X_tr, y_tr = X[train_mask], y[train_mask]
         X_te, y_te = X[test_mask], y[test_mask]
+        
+        weights_tr = _get_sample_weights(X_tr.index)
+        
         clf = lgb.LGBMClassifier(n_estimators=150, learning_rate=0.03, max_depth=4, subsample=0.8, colsample_bytree=0.8, random_state=42, verbose=-1)
-        clf.fit(X_tr, y_tr)
+        clf.fit(X_tr, y_tr, sample_weight=weights_tr)
         probs = clf.predict_proba(X_te)[:, 1]
         threshold = np.percentile(probs, 95)
         selected = probs >= threshold
@@ -149,9 +164,10 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
             log(f"Fold {fold}: Base Rate={base_rate:.1f}% | Top-5% Precision={precision:.1f}% | Edge=+{precision - base_rate:.1f}%")
             fold_metrics.append({"fold": fold, "base_rate": base_rate, "precision": precision})
 
-    log("Training final production model on all data...")
+    log("Training final production model on all data (with recency weights)...")
+    final_weights = _get_sample_weights(X.index)
     final_model = lgb.LGBMClassifier(n_estimators=150, learning_rate=0.03, max_depth=4, subsample=0.8, colsample_bytree=0.8, random_state=42, verbose=-1)
-    final_model.fit(X, y)
+    final_model.fit(X, y, sample_weight=final_weights)
     
     model_path = os.path.join(settings.DATA_DIR, f"model_strategy_{strategy_id}.txt")
     log(f"Saving final model to {model_path}...")

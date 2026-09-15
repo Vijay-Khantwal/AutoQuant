@@ -72,18 +72,43 @@ class SerperJinaProvider(BaseSearchProvider):
         return results
 
 
-def tool_deep_web_research(ticker: str, provider: BaseSearchProvider) -> Dict[str, Any]:
+def tool_deep_web_research(ticker: str, provider: BaseSearchProvider = None) -> Dict[str, Any]:
+    from apps.research.models import NewsArticle
+    from apps.research.services.rss_ingestion import fetch_yfinance_news_for_ticker
+    
     clean_name = ticker.replace(".NS", "").replace(".BO", "")
-    queries = [
-        f"{clean_name} share latest news analysis earnings probe",
-        f"{clean_name} stock brokerage target rating outlook",
-        f"{clean_name} management commentary future guidance",
-        f"{clean_name} sector headwinds tailwinds competitor analysis",
-    ]
+    
+    # 1. Fetch free latest news from yfinance to augment the RSS cache
+    fetch_yfinance_news_for_ticker(ticker)
+    
+    # 2. Query our local RSS/yfinance database first
+    # Match explicitly on ticker OR by keyword in the title/summary
+    from django.db.models import Q
+    recent_news = NewsArticle.objects.filter(
+        Q(ticker=ticker) | Q(title__icontains=clean_name) | Q(summary__icontains=clean_name)
+    ).order_by("-published_at")[:15]
+    
     all_articles = []
-    for q in queries:
-        try:
-            all_articles.extend(provider.search_and_extract(query=q, max_results=5))
-        except Exception as exc:
-            all_articles.append({"title": f"Error: {q}", "url": "", "content": str(exc)})
+    if recent_news.exists():
+        logger.info(f"[{ticker}] Found {recent_news.count()} local news articles. Bypassing expensive web search.")
+        for article in recent_news:
+            all_articles.append({
+                "title": article.title,
+                "url": article.url,
+                "content": article.summary
+            })
+    else:
+        logger.warning(f"[{ticker}] No local news found. Falling back to expensive web search.")
+        queries = [
+            f"{clean_name} share latest news analysis earnings probe",
+            f"{clean_name} stock brokerage target rating outlook",
+            f"{clean_name} management commentary future guidance",
+        ]
+        if provider:
+            for q in queries:
+                try:
+                    all_articles.extend(provider.search_and_extract(query=q, max_results=3))
+                except Exception as exc:
+                    all_articles.append({"title": f"Error: {q}", "url": "", "content": str(exc)})
+                    
     return {"ticker": ticker, "total_sources_analyzed": len(all_articles), "articles": all_articles}
