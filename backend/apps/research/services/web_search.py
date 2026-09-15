@@ -95,6 +95,7 @@ def tool_deep_web_research(ticker: str, provider: BaseSearchProvider = None) -> 
             all_articles.append({
                 "title": article.title,
                 "url": article.url,
+                "published_at": str(article.published_at.strftime("%Y-%m-%d %H:%M:%S")),
                 "content": article.summary
             })
     else:

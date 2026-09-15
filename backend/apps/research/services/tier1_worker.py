@@ -35,12 +35,14 @@ def distill_news_articles(ticker: str, web_data: dict) -> dict:
         return {"bullet_points": "No recent news articles found."}
 
     raw_text = "\n\n---\n\n".join(
-        [f"Title: {a['title']}\nContent: {a['content'][:3000]}" for a in articles]
+        [f"Title: {a.get('title')}\nDate: {a.get('published_at', 'Unknown/Recent')}\nContent: {a.get('content', '')[:3000]}" for a in articles]
     )
     prompt = f"""
 You are an expert financial analyst. Read the following recent articles for {ticker}.
 Write a highly precise, broad, and nuanced executive summary of the current situation. 
 Capture the true context: catalysts, risks, management tone, and macroeconomic tailwinds/headwinds.
+
+Pay close attention to the `Date` attached to each article. If events unfold chronologically (e.g. an upgrade follows an earnings miss), ensure your summary reflects the correct sequence of events and the most current state of the business.
 
 Do not force the text into arbitrary buckets. Present a rich, cohesive bulleted summary that a human Portfolio Manager would read to understand the exact reality of the business right now.
 
