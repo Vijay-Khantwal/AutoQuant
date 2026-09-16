@@ -43,22 +43,21 @@ def fetch_rss_feeds():
                 else:
                     dt = datetime.now(timezone.utc)
                     
-                # Skip if already exists
-                if NewsArticle.objects.filter(url=url).exists():
-                    continue
-                    
                 # Attempt to extract ticker if it's explicitly mentioned (Very naive check for NSE format)
                 # In a real system, we'd use SpaCy or a quick regex on known NSE tickers.
                 # For this step, we leave it blank, and the web_search fallback will match by keywords.
                 
-                NewsArticle.objects.create(
-                    title=title,
+                obj, created = NewsArticle.objects.update_or_create(
                     url=url,
-                    summary=summary,
-                    published_at=dt,
-                    source=feed_url.split('/')[2]
+                    defaults={
+                        'title': title,
+                        'summary': summary,
+                        'published_at': dt,
+                        'source': feed_url.split('/')[2]
+                    }
                 )
-                new_articles += 1
+                if created:
+                    new_articles += 1
                 
         except Exception as e:
             logger.error(f"Error fetching {feed_url}: {e}")
@@ -83,10 +82,6 @@ def fetch_yfinance_news_for_ticker(ticker):
             if not title or not url:
                 continue
                 
-            if NewsArticle.objects.filter(url=url).exists():
-                continue
-                
-            dt = datetime.now(timezone.utc)
             if pub_date_str:
                 try:
                     # yfinance usually gives ISO format
@@ -94,15 +89,18 @@ def fetch_yfinance_news_for_ticker(ticker):
                 except:
                     pass
             
-            NewsArticle.objects.create(
-                ticker=ticker,
-                title=title,
+            obj, created = NewsArticle.objects.update_or_create(
                 url=url,
-                summary=summary,
-                published_at=dt,
-                source='yfinance'
+                defaults={
+                    'ticker': ticker,
+                    'title': title,
+                    'summary': summary,
+                    'published_at': dt,
+                    'source': 'yfinance'
+                }
             )
-            new_count += 1
+            if created:
+                new_count += 1
         return new_count
     except Exception as e:
         logger.error(f"Failed to fetch yfinance news for {ticker}: {e}")
