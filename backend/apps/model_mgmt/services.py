@@ -25,7 +25,7 @@ FEATURE_COLS = [
     "Intraday_Range", "Close_Open_Momentum", "Top_Wick_Rejection",
     "Dist_SMA_10", "Dist_SMA_50", "Volume_Ratio",
     "Relative_Strength_10d", "Market_Regime_200",
-    "VIX_Close", "VIX_5d_Change",
+    "VIX_Regime", "VIX_5d_Change",
     "Month", "DayOfWeek"
 ]
 
@@ -100,11 +100,11 @@ def retrain_model(strategy_id: int, log_callback=None) -> dict:
     nifty_df["Market_Regime_200"] = nifty_df["Close"] / nifty_df["Nifty_SMA_200"] - 1
     nifty_df["Nifty_Return_10d"] = nifty_df["Close"] / nifty_df["Close"].shift(10) - 1
     
-    vix_df["VIX_Close"] = vix_df["Close"]
+    vix_df["VIX_Regime"] = vix_df["Close"] / vix_df["Close"].rolling(200).mean() - 1
     vix_df["VIX_5d_Change"] = vix_df["Close"] / vix_df["Close"].shift(5) - 1
     
     macro_features = nifty_df[["Market_Regime_200", "Nifty_Return_10d"]].copy()
-    macro_features["VIX_Close"] = vix_df["VIX_Close"]
+    macro_features["VIX_Regime"] = vix_df["VIX_Regime"]
     macro_features["VIX_5d_Change"] = vix_df["VIX_5d_Change"]
     macro_features = macro_features.tz_localize(None)
 
