@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { PageHeader, Button, Badge, Spinner, EmptyState, Pagination } from '../components/ui'
 import { ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react'
 import { getResearchRuns, triggerResearch } from '../api/research'
@@ -211,7 +211,7 @@ export default function AuditDossier() {
               </button>
             )
           })}
-          {runsTotal > 0 && <div className="mt-4"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} /></div>}
+          {runsTotal > 0 && <div className="mt-4"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} pageSize={10} /></div>}
         </div>
 
         <div className="flex-1">

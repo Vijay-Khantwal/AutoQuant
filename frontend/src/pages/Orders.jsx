@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react'
-import { PageHeader, Card, Button, Badge, Spinner } from '../components/ui'
+import { useEffect, useState } from 'react'
+import { PageHeader, Card, Button, Badge, Spinner, Pagination } from '../components/ui'
 import { RefreshCw } from 'lucide-react'
 import { getOrders, getLiveOrders } from '../api/execution'
 
@@ -10,10 +10,16 @@ export default function Orders() {
   const [liveOrders, setLiveOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('db')
+  const [page, setPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
 
   useEffect(() => {
-    getOrders().then(r => setOrders(r.data.results || r.data)).finally(() => setLoading(false))
-  }, [])
+    setLoading(true)
+    getOrders({ page }).then(r => {
+      setOrders(r.data.results || r.data)
+      setTotalCount(r.data.count || (r.data.results ? r.data.results.length : r.data.length))
+    }).finally(() => setLoading(false))
+  }, [page])
 
   const refreshLive = () =>
     getLiveOrders().then(r => setLiveOrders(r.data.orders || []))
@@ -29,8 +35,8 @@ export default function Orders() {
       />
 
       <div className="flex gap-2 mb-4">
-        <button onClick={() => setTab('db')} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'db' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
-          DB Orders ({orders.length})
+        <button onClick={() => { setTab('db'); setPage(1); }} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'db' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
+          DB Orders ({tab === 'db' ? totalCount : orders.length})
         </button>
         <button onClick={() => { setTab('live'); refreshLive() }} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'live' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
           Live Dhan Orders ({liveOrders.length})
@@ -52,28 +58,33 @@ export default function Orders() {
               <tbody>
                 {list.map((o, i) => (
                   <tr key={o.id || i} className="border-b border-gray-800 hover:bg-gray-800/40">
-                    <td className="px-4 py-3 font-medium">{(o.ticker || o.tradingSymbol || 'â€”').replace('.NS','')}</td>
+                    <td className="px-4 py-3 font-medium">{(o.ticker || o.tradingSymbol || '?').replace('.NS','')}</td>
                     <td className="px-4 py-3"><Badge color={o.transaction_type === 'BUY' ? 'green' : 'red'}>{o.transaction_type || o.transactionType}</Badge></td>
                     <td className="px-4 py-3">{o.quantity}</td>
                     <td className="px-4 py-3">₹{Number(o.price || o.price || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3">₹{Number(o.allocated_inr || 0).toFixed(0)}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{o.dhan_order_id || o.orderId || 'â€”'}</td>
+                    <td className="px-4 py-3">₹{Number(o.allocated_inr || o.allocated_inr || 0).toFixed(0)}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{o.dhan_order_id || o.orderId || '?'}</td>
                     <td className="px-4 py-3"><Badge color={statusColor(o.dhan_status || o.orderStatus)}>{o.dhan_status || o.orderStatus}</Badge></td>
                     <td className="px-4 py-3 text-gray-300">₹{Number(o.fee_zerodha || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-gray-300">₹{Number(o.fee_dhan || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-gray-300">₹{Number(o.fee_groww || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-gray-300">₹{Number(o.fee_angel || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : 'â€”'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '?'}</td>
                   </tr>
                 ))}
                 {list.length === 0 && <tr><td colSpan={12} className="text-center py-10 text-gray-500">No orders yet</td></tr>}
               </tbody>
             </table>
+            {tab === 'db' && totalCount > 10 && (
+              <div className="mt-4 flex justify-center">
+                <Pagination totalCount={totalCount} currentPage={page} onPageChange={setPage} pageSize={10} />
+              </div>
+            )}
           </div>
         )}
       </Card>
     </div>
   )
+
+
 }
-
-

@@ -94,7 +94,7 @@ export default function Signals() {
               </button>
             )
           })}
-          {runsTotal > 0 && <div className="mt-4"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} /></div>}
+          {runsTotal > 0 && <div className="mt-4"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} pageSize={10} /></div>}
         </div>
 
         <Card className="flex-1">
@@ -138,7 +138,7 @@ export default function Signals() {
                     ))}
                   </tbody>
                 </table>
-                {signalsTotal > 0 && <div className="p-4 border-t border-gray-800"><Pagination totalCount={signalsTotal} currentPage={signalsPage} onPageChange={setSignalsPage} /></div>}
+                {signalsTotal > 0 && <div className="p-4 border-t border-gray-800"><Pagination totalCount={signalsTotal} currentPage={signalsPage} onPageChange={setSignalsPage} pageSize={10} /></div>}
               </div>
               )}
             </CardBody>
