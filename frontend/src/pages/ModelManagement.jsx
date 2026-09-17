@@ -18,6 +18,7 @@ export default function ModelManagement() {
   const [newStratSL, setNewStratSL] = useState('-0.03')
   const [newStratHold, setNewStratHold] = useState('15')
   const [creating, setCreating] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const { startTask, hasRunning } = useTaskStore()
   const { strategies, setStrategies, selectedStrategyId, setSelectedStrategyId } = useStrategyStore()
@@ -72,6 +73,7 @@ export default function ModelManagement() {
       setStrategies(stratList.data.results || stratList.data)
       setSelectedStrategyId(res.data.id)
       setNewStratName('')
+      setShowCreateModal(false)
       addToast({ type: 'success', title: 'Strategy Created', message: 'Ready to train model!' })
     } catch(err) {
       addToast({ type: 'error', title: 'Error', message: 'Could not create strategy' })
@@ -81,13 +83,54 @@ export default function ModelManagement() {
 
   return (
     <div>
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md relative">
+            <button onClick={() => setShowCreateModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10 cursor-pointer">✕</button>
+            <Card>
+              <CardHeader title="Create New Strategy" subtitle="Add a new Target/SL combo to train" />
+              <CardBody>
+                <form onSubmit={handleCreateStrategy} className="space-y-3 text-sm">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Strategy Name</label>
+                    <input required value={newStratName} onChange={e=>setNewStratName(e.target.value)} type="text" placeholder="e.g. Aggressive 6/3" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Take Profit (Decimal)</label>
+                      <input required value={newStratTP} onChange={e=>setNewStratTP(e.target.value)} type="number" step="0.01" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Stop Loss (Decimal)</label>
+                      <input required value={newStratSL} onChange={e=>setNewStratSL(e.target.value)} type="number" step="0.01" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Hold Days</label>
+                    <input required value={newStratHold} onChange={e=>setNewStratHold(e.target.value)} type="number" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
+                  </div>
+                  <Button type="submit" className="w-full justify-center" disabled={creating}>
+                    {creating ? 'Creating...' : '+ Add Strategy'}
+                  </Button>
+                </form>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         title="Model Management"
         subtitle="Manage strategy profiles and re-train LightGBM models"
         actions={
-          <Button onClick={handleRetrain} disabled={isRunning || !selectedStrategyId}>
-            {isRunning ? <><Spinner /> Running...</> : <><Cpu size={16} className="mr-2 inline" /> Retrain Model</>}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCreateModal(true)} variant="secondary">
+              + New Strategy
+            </Button>
+            <Button onClick={handleRetrain} disabled={isRunning || !selectedStrategyId}>
+              {isRunning ? <><Spinner /> Running...</> : <><Cpu size={16} className="mr-2 inline" /> Retrain Model</>}
+            </Button>
+          </div>
         }
       />
 
@@ -95,36 +138,6 @@ export default function ModelManagement() {
         
         {/* Left Column */}
         <div className="space-y-6 xl:col-span-1">
-          {/* Create Strategy Form */}
-          <Card>
-            <CardHeader title="Create New Strategy" subtitle="Add a new Target/SL combo to train" />
-            <CardBody>
-              <form onSubmit={handleCreateStrategy} className="space-y-3 text-sm">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Strategy Name</label>
-                  <input required value={newStratName} onChange={e=>setNewStratName(e.target.value)} type="text" placeholder="e.g. Aggressive 6/3" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Take Profit (Decimal)</label>
-                    <input required value={newStratTP} onChange={e=>setNewStratTP(e.target.value)} type="number" step="0.01" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Stop Loss (Decimal)</label>
-                    <input required value={newStratSL} onChange={e=>setNewStratSL(e.target.value)} type="number" step="0.01" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Hold Days</label>
-                  <input required value={newStratHold} onChange={e=>setNewStratHold(e.target.value)} type="number" className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white outline-none focus:border-blue-500" />
-                </div>
-                <Button type="submit" className="w-full justify-center" disabled={creating}>
-                  {creating ? 'Creating...' : '+ Add Strategy'}
-                </Button>
-              </form>
-              {runsTotal > 0 && <div className="p-4 border-t border-gray-800"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} /></div>}
-            </CardBody>
-          </Card>
 
           <Card>
             <CardHeader title="Training Runs" />
@@ -144,7 +157,7 @@ export default function ModelManagement() {
                   )
                 })}
               </div>
-              {runsTotal > 0 && <div className="p-4 border-t border-gray-800"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} /></div>}
+              {runsTotal > 0 && <div className="p-4 border-t border-gray-800"><Pagination totalCount={runsTotal} currentPage={runsPage} onPageChange={setRunsPage} pageSize={10} /></div>}
             </CardBody>
           </Card>
         </div>
