@@ -52,6 +52,10 @@ def run_prediction(strategy_id: int, log_callback=None) -> list[dict]:
     known_delisted = ["HDFC.NS", "TATAMOTORS.NS", "MOTHERSUMI.NS", "MINDAIND.NS", "IBULHSGFIN.NS"]
     stock_basket = [t for t in raw_basket if t not in known_delisted]
 
+    # Pre-ML Fundamental Screener (Drop junk companies BEFORE expensive ML/LLM evaluation)
+    from apps.signals.screener import pre_ml_screen
+    stock_basket = pre_ml_screen(stock_basket, log_callback=log_callback)
+
     # Fetch 210 days to cover 200-SMA + 10-day return
     start_date = (datetime.today() - timedelta(days=320)).strftime("%Y-%m-%d")
     raw_data = yf.download(stock_basket, start=start_date, progress=False, threads=True, group_by="ticker")
