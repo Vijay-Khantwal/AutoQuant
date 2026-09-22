@@ -50,15 +50,15 @@ def run_execution_task(self, decision_ids: list = None, research_run_id: int = N
         if decision_ids:
             decisions = StockDecision.objects.filter(id__in=decision_ids)
         elif research_run_id:
-            decisions = StockDecision.objects.filter(run_id=research_run_id, action='APPROVE')
+            decisions = StockDecision.objects.filter(run_id=research_run_id)
         else:
             # Latest research run
             latest = ResearchRun.objects.filter(status="SUCCESS").first()
             if not latest:
                 raise ValueError("No successful research run found.")
-            decisions = StockDecision.objects.filter(run=latest, action='APPROVE')
+            decisions = StockDecision.objects.filter(run=latest)
 
-        log(f"Executing {decisions.count()} AI-approved decisions...")
+        log(f"Executing {decisions.count()} requested decisions (including rejects)...")
         capital = settings.CAPITAL_PER_TRADE_INR
 
         for dec in decisions:
